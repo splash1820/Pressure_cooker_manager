@@ -131,6 +131,12 @@
                 <button class="button" onclick="nextCalibration()" disabled id="next-btn">Next Sample</button>
                 <button class="button" onclick="manualCalibration()" id="manual-btn">Manual Input</button>
             </div>
+            <div id="calibration-load-profile-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+              <h3>Or Load Existing Profile</h3>
+              <label for="calibration-profile-select">Load Profile:</label>
+              <select id="calibration-profile-select" class="target-input" style="min-width: 200px;"></select>
+              <button class="button" onclick="loadProfileFromCalibrationStep()" id="calibration-load-btn" disabled>Load & Test</button>
+          </div>
         </div>
 
         <!-- Step 3: Validation -->

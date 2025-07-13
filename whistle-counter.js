@@ -736,7 +736,7 @@ showDebugInfo(analysis) {
                 console.log('loadProfiles: No stored profiles found, initializing empty array.');
             }
             // CALL THE CLASS METHOD HERE
-            this.populateSavedProfilesDropdown(); 
+            this.populateSavedProfilesDropdown('calibration-profile-select'); 
         } catch (error) {
             console.error('Error loading profiles from localStorage:', error);
             this.savedProfiles = [];
@@ -772,7 +772,8 @@ showDebugInfo(analysis) {
         try {
             localStorage.setItem('cookerWhistleProfiles', JSON.stringify(this.savedProfiles));
             // CALL THE CLASS METHOD HERE
-            this.populateSavedProfilesDropdown(); 
+            this.populateSavedProfilesDropdown('profile-select'); 
+            this.populateSavedProfilesDropdown('calibration-profile-select');
             return true;
         } catch (error) {
             console.error('Error saving profile to localStorage:', error);
@@ -802,7 +803,8 @@ showDebugInfo(analysis) {
             try {
                 localStorage.setItem('cookerWhistleProfiles', JSON.stringify(this.savedProfiles));
                 // CALL THE CLASS METHOD HERE
-                this.populateSavedProfilesDropdown(); 
+                this.populateSavedProfilesDropdown('profile-select');
+                this.populateSavedProfilesDropdown('calibration-profile-select'); 
                 this.showStatus(`Profile "${name}" deleted.`, 'info');
                 if (this.whistleProfile && this.whistleProfile.name === name) {
                      this.whistleProfile = null;
@@ -819,20 +821,29 @@ showDebugInfo(analysis) {
         }
     }
 
-        populateSavedProfilesDropdown() { // No 'function' keyword here
+        populateSavedProfilesDropdown(targetSelectId = 'profile-select') { // No 'function' keyword here
         const selectElement = document.getElementById('profile-select');
         selectElement.innerHTML = ''; // Clear existing options
 
         console.log('populateSavedProfilesDropdown: Currently available savedProfiles:', this.savedProfiles); // Use this.savedProfiles
+        
+          const loadButton = document.getElementById('load-profile-btn');
+          const deleteButton = document.getElementById('delete-profile-btn');
+          const calibrationLoadButton = document.getElementById('calibration-load-btn');
 
         if (this.savedProfiles.length === 0) { // Use this.savedProfiles
             const option = document.createElement('option');
             option.value = '';
             option.textContent = 'No saved profiles';
             selectElement.appendChild(option);
-            document.getElementById('load-profile-btn').disabled = true;
-            document.getElementById('delete-profile-btn').disabled = true;
+            if (loadButton) loadButton.disabled = true;
+            if (deleteButton) deleteButton.disabled = true;
+            if (calibrationLoadButton) calibrationLoadButton.disabled = true; 
         } else {
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '-- Select a profile --'; // Added a helpful default
+            selectElement.appendChild(defaultOption);
             this.savedProfiles.forEach(profile => { // Use this.savedProfiles
                 const option = document.createElement('option');
                 option.value = profile.name;
@@ -841,7 +852,8 @@ showDebugInfo(analysis) {
             });
             
             let selectedValue = '';
-            if (this.whistleProfile) { // Use this.whistleProfile
+
+            if (targetSelectId === 'profile-select' && this.whistleProfile) { // Use this.whistleProfile
                 const activeProfileEntry = this.savedProfiles.find(p => // Use this.savedProfiles
                     p.profile && 
                     p.profile.targetFrequency === this.whistleProfile.targetFrequency &&
@@ -853,24 +865,51 @@ showDebugInfo(analysis) {
                     selectedValue = activeProfileEntry.name;
                 }
             }
-            
-            if (!selectedValue && selectElement.options.length > 0) {
-                selectedValue = selectElement.options[0].value;
-            }
-
             selectElement.value = selectedValue;
-            console.log(`populateSavedProfilesDropdown: Dropdown set to value: "${selectElement.value}"`);
+            const hasSelection = selectElement.value !== '';
+                    if (loadButton) loadButton.disabled = !hasSelection;
+                    if (deleteButton) deleteButton.disabled = !hasSelection;
+                    if (calibrationLoadButton) calibrationLoadButton.disabled = !hasSelection; // Enable new button based on selection
 
-            document.getElementById('load-profile-btn').disabled = false;
-            document.getElementById('delete-profile-btn').disabled = false;
-        }
-    }
-}
+                    // Add event listener to the new dropdown to enable/disable its button
+                    if (targetSelectId === 'calibration-profile-select') {
+                        selectElement.onchange = () => {
+                            calibrationLoadButton.disabled = (selectElement.value === '');
+                        };
+                    }
+                }
+              }
+            }
 
 // Global instance
 let whistleCounter = new WhistleCounter();
 
 // UI Functions
+function loadProfileFromCalibrationStep() {
+    const selectElement = document.getElementById('calibration-profile-select');
+    const selectedName = selectElement.value;
+
+    if (!selectedName) {
+        whistleCounter.showStatus('Please select a profile to load.', 'warning');
+        return;
+    }
+
+    if (whistleCounter.loadProfile(selectedName)) { // Load the profile
+        showStep('step-validation'); // Go directly to validation
+        // Start validation with the newly loaded profile
+        whistleCounter.currentCount = 0;
+        whistleCounter.updateCounterDisplay();
+        whistleCounter.startDetection();
+        whistleCounter.showStatus(`Profile "${selectedName}" loaded. Testing detection...`, 'info');
+        
+        // Ensure validation buttons are set correctly after direct jump
+        document.getElementById('validate-btn').textContent = 'Stop Test';
+        document.getElementById('validate-btn').onclick = stopValidation;
+    } else {
+        whistleCounter.showStatus('Failed to load profile.', 'error');
+    }
+}
+
 function showStep(stepId) {
     document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
     document.getElementById(stepId).classList.add('active');
@@ -882,6 +921,7 @@ function startCalibration() {
     whistleCounter.calibrationSamples = [];
     whistleCounter.whistleProfile = null; // Clear active profile for new calibration
     updateCalibrationUI();
+    whistleCounter.populateSavedProfilesDropdown('calibration-profile-select');
 }
 
 function updateCalibrationUI() {
