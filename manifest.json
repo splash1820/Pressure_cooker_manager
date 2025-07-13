@@ -1,0 +1,22 @@
+{
+  "name": "Cooker Whistle Counter",
+  "short_name": "WhistleCounter",
+  "description": "Counts cooker whistles to help you cook perfectly.",
+  "start_url": "whistle-counter.html",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "orientation": "portrait"
+}
