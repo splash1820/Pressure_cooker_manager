@@ -3,8 +3,8 @@ const urlsToCache = [
   'index.html',
   'whistle-counter.js',
   'manifest.json',
-  './favicon-16x16.png', // Make sure these paths are correct
-  './icon-32x32.png'  // relative to the service worker's scope
+  './android-chrome-192x192.png', // Make sure these paths are correct
+  './android-chrome-512x512.png'  // relative to the service worker's scope
 ];
 
 // Install event: cache all necessary assets
