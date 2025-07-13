@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooker Whistle Counter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .record-button {
+            background-color: #ff4444;
+            font-size: 18px;
+            padding: 20px 40px;
+            border-radius: 50px;
+        }
+        .record-button.recording {
+            background-color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .counter {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+            margin: 20px 0;
+        }
+        .frequency-display {
+            width: 100%;
+            height: 200px;
+            background: #000;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status.info {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .target-input {
+            font-size: 18px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍲 Cooker Whistle Counter</h1>
+        
+        <!-- Step 1: Welcome -->
+        <div class="step active" id="step-welcome">
+            <h2>Welcome!</h2>
+            <p>This app will help you count cooker whistles accurately. We'll start by learning your cooker's unique whistle sound.</p>
+            <button class="button" onclick="startCalibration()">Start Calibration</button>
+        </div>
+
+        <!-- Step 2: Calibration -->
+        <div class="step" id="step-calibration">
+            <h2>Calibration (Step <span id="calibration-step">1</span> of 3)</h2>
+            <p>Please record your cooker whistle. Make sure:</p>
+            <ul>
+                <li>The cooker is whistling clearly</li>
+                <li>You're close to the cooker (within 3 feet)</li>
+                <li>Minimize background noise</li>
+            </ul>
+            <div class="status info" id="calibration-status">Ready to record sample 1</div>
+            <button class="button record-button" id="record-btn" onclick="toggleRecording()">🎤 Record Whistle</button>
+            <canvas class="frequency-display" id="frequency-canvas"></canvas>
+            <div>
+                <button class="button" onclick="retryCalibration()" disabled id="retry-btn">Retry This Sample</button>
+                <button class="button" onclick="nextCalibration()" disabled id="next-btn">Next Sample</button>
+                <button class="button" onclick="manualCalibration()" id="manual-btn">Manual Input</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Validation -->
+        <div class="step" id="step-validation">
+            <h2>Validation</h2>
+            <p>Let's test the detection. Make your cooker whistle and see if it gets detected:</p>
+            <div class="status info" id="validation-status">Click start to test detection</div>
+            <button class="button" onclick="startValidation()" id="validate-btn">Start Test</button>
+            <div class="counter" id="validation-counter">0</div>
+            <canvas class="frequency-display" id="validation-canvas"></canvas>
+            <div>
+                <button class="button" onclick="recalibrate()">Recalibrate</button>
+                <button class="button" onclick="finishCalibration()" id="finish-btn">Looks Good!</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Main Counter -->
+        <div class="step" id="step-counter">
+          <h2>Whistle Counter</h2>
+          <div>
+              <label>Target Whistles: </label>
+              <input type="number" class="target-input" id="target-input" value="3" min="1" max="20">
+              <button class="button" onclick="startCounting()" id="start-btn">Start Counting</button>
+              <button class="button" onclick="stopCounting()" id="stop-btn" disabled>Stop</button>
+              <button class="button" onclick="resetCounter()">Reset</button>
+          </div>
+          <div class="counter" id="whistle-counter">0</div>
+          <div class="status info" id="counter-status">Set your target and click start</div>
+          <canvas class="frequency-display" id="counter-canvas"></canvas>
+          
+          <!-- Add debug panel -->
+          <div id="debug-info" style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; font-size: 12px;"></div>
+          
+          <div>
+              <button class="button" onclick="showSettings()">Settings</button>
+          </div>
+
+          <!-- New: Calibration Management Panel -->
+          <div id="calibration-management" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+              <h3>Manage Cooker Profiles</h3>
+              <div>
+                  <input type="text" class="target-input" id="profile-name-input" placeholder="Enter profile name">
+                  <button class="button" onclick="saveCurrentProfile()">Save Current Profile</button>
+              </div>
+              <div style="margin-top: 15px;">
+                  <label for="profile-select">Load Profile:</label>
+                  <select id="profile-select" class="target-input" style="min-width: 200px;"></select>
+                  <button class="button" onclick="loadSelectedProfile()" id="load-profile-btn" disabled>Load Selected</button>
+                  <button class="button" onclick="deleteSelectedProfile()" id="delete-profile-btn" disabled>Delete Selected</button>
+              </div>
+          </div>
+      </div>
+
+    </div>
+
+    <script src="whistle-counter.js"></script>
+</body>
+</html>
