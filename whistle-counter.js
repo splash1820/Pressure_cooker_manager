@@ -16,7 +16,7 @@ class WhistleCounter {
         this.targetWhistles = 3;
         this.currentCount = 0;
         this.lastDetectionTime = 0;
-        this.detectionCooldown = 2000; // 2 seconds between detections
+        this.detectionCooldown = 2000; // 2 seconds between detections (unused)
         
         // Audio analysis
         this.fftSize = 2048;
@@ -30,7 +30,7 @@ class WhistleCounter {
         this.sustainedFrames = 0; // Count of consecutive matching frames
         this.requiredSustainedFrames = 8; // Minimum sustained frames for detection
         this.lastWhistleEnd = 0;
-        this.minimumWhistleGap = 1000 * 30; // 30 sec between whistles
+        this.minimumWhistleGap = 1000 * 6; // 30 sec between whistles
         
         // Frequency analysis improvements
         this.frequencyBins = 5; // Number of frequency bins to check
