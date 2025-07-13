@@ -2,7 +2,7 @@
   "name": "Cooker Whistle Counter",
   "short_name": "WhistleCounter",
   "description": "Counts cooker whistles to help you cook perfectly.",
-  "start_url": "whistle-counter.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f5f5f5",
   "theme_color": "#4CAF50",

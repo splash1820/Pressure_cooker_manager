@@ -1,6 +1,6 @@
 const CACHE_NAME = 'cooker-whistle-counter-v1';
 const urlsToCache = [
-  'whistle-counter.html',
+  'index.html',
   'whistle-counter.js',
   'manifest.json',
   './favicon-16x16.png', // Make sure these paths are correct
